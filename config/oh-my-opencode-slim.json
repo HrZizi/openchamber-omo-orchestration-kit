@@ -1,0 +1,180 @@
+{
+  "setDefaultAgent": true,
+  "stripOrchestratorModel": true,
+  "autoUpdate": false,
+  "disabled_agents": [],
+  "image_routing": "auto",
+  "agents": {
+    "oracle": {
+      "model": [
+        {
+          "id": "openai/gpt-6-astra",
+          "variant": "xhigh"
+        },
+        "claude-code/claude-opus-5-5",
+        {
+          "id": "openai/gpt-6.1-sol",
+          "variant": "high"
+        }
+      ]
+    },
+    "explorer": {
+      "model": [
+        "opencode/mimo-v2.6-flash-free",
+        "opencode/space-bunny-free",
+        "opencode/nemotron-3.5-lightning-free"
+      ]
+    },
+    "librarian": {
+      "model": [
+        "opencode/mimo-v2.6-flash-free",
+        "opencode/space-bunny-free",
+        "opencode/nemotron-3-ultra-free"
+      ]
+    },
+    "designer": {
+      "model": [
+        "opencode/muse-spark-1.3-contributor-free",
+        "opencode/mimo-v2.6-flash-free",
+        "opencode/space-bunny-free"
+      ]
+    },
+    "observer": {
+      "model": [
+        "opencode/muse-spark-1.3-contributor-free",
+        "opencode/mimo-v2.6-flash-free",
+        "opencode/space-bunny-free"
+      ]
+    },
+    "fixer": {
+      "model": [
+        "opencode/muse-spark-1.3-contributor-free",
+        "opencode/mimo-v2.6-flash-free",
+        "opencode/nemotron-3-ultra-free"
+      ]
+    },
+    "planner-low": {
+      "model": [
+        "opencode/mimo-v2.6-flash-free",
+        "opencode/big-pickle",
+        "opencode/nemotron-3-ultra-free"
+      ],
+      "prompt": "Plan LOW-risk project work. Inspect the relevant code and produce a concise implementation plan with scope, affected areas, tests, and risks. Prefer the smallest coherent change. Do not modify files.",
+      "permission": {
+        "edit": "deny"
+      }
+    },
+    "reviewer-low": {
+      "model": [
+        "opencode/nemotron-3-ultra-free",
+        "opencode/mimo-v2.6-flash-free",
+        "opencode/big-pickle"
+      ],
+      "prompt": "Review a LOW-risk project plan independently. Look for missing cases, unnecessary scope, regressions, and cheaper or safer alternatives. Return APPROVE or REVISE with concise reasons. Do not modify files.",
+      "permission": {
+        "edit": "deny"
+      }
+    },
+    "planner": {
+      "model": [
+        {
+          "id": "openai/gpt-6.1-sol",
+          "variant": "high"
+        },
+        "claude-code/claude-sonnet-5-5"
+      ],
+      "prompt": "Plan MEDIUM/HIGH-risk project work. Inspect the repository and evidence, define the problem precisely, identify dependencies and invariants, split implementation into safe stages, specify validation, and surface unresolved assumptions. Do not modify files.",
+      "permission": {
+        "edit": "deny"
+      }
+    },
+    "reviewer": {
+      "model": [
+        "claude-code/claude-sonnet-5-5",
+        {
+          "id": "openai/gpt-6.1-sol",
+          "variant": "high"
+        }
+      ],
+      "prompt": "Act as an independent adversarial reviewer for MEDIUM/HIGH-risk project plans. Challenge assumptions, architecture, failure modes, test coverage, migration concerns, and unnecessary complexity. Return APPROVE or REVISE with concrete corrections. Do not modify files.",
+      "permission": {
+        "edit": "deny"
+      }
+    },
+    "critical-planner": {
+      "model": [
+        "claude-code/claude-opus-5-5",
+        {
+          "id": "openai/gpt-6.1-sol",
+          "variant": "high"
+        },
+        "claude-code/claude-sonnet-5-5"
+      ],
+      "prompt": "Plan CRITICAL project work where architectural, data-integrity, security, evaluation, or irreversible consequences are material. Build a rigorous staged plan, enumerate invariants and rollback paths, identify evidence gaps, and define explicit go/no-go gates. Do not modify files.",
+      "permission": {
+        "edit": "deny"
+      }
+    },
+    "implementer-alt": {
+      "model": [
+        "opencode/mimo-v2.6-flash-free",
+        "opencode/muse-spark-1.3-contributor-free",
+        "opencode/nemotron-3-ultra-free"
+      ],
+      "prompt": "Implement an assigned, already-approved project task. Stay within the assigned write ownership and scope, preserve architecture, add or update focused tests, and report exactly what changed and what remains. Do not broaden the task without returning to the orchestrator."
+    },
+    "verification": {
+      "model": [
+        "opencode/nemotron-3.5-lightning-free",
+        "opencode/mimo-v2.6-flash-free",
+        "opencode/space-bunny-free"
+      ],
+      "prompt": "Verify an implemented project change independently. Run the relevant tests and inspections, check regressions and acceptance criteria, and distinguish observed evidence from inference. Do not edit files. Return PASS, FAIL, or INCONCLUSIVE with evidence.",
+      "permission": {
+        "edit": "deny"
+      }
+    },
+    "auditor-low": {
+      "model": [
+        "opencode/nemotron-3-ultra-free",
+        "opencode/mimo-v2.6-flash-free",
+        "opencode/big-pickle"
+      ],
+      "prompt": "Perform the final audit for LOW-risk project work. Compare the implementation to the approved scope and acceptance criteria, inspect tests and regressions, and return PASS or FAIL with concise evidence. Do not modify files.",
+      "permission": {
+        "edit": "deny"
+      }
+    },
+    "auditor": {
+      "model": [
+        {
+          "id": "openai/gpt-6.1-sol",
+          "variant": "high"
+        },
+        "claude-code/claude-sonnet-5-5"
+      ],
+      "prompt": "Perform an adversarial final audit for MEDIUM/HIGH-risk project work. Validate requirements, architecture, correctness, regression coverage, edge cases, and whether the evidence actually proves the claimed result. Return PASS or FAIL with actionable findings. Do not modify files.",
+      "permission": {
+        "edit": "deny"
+      }
+    },
+    "critical-auditor": {
+      "model": [
+        "claude-code/claude-opus-5-5",
+        {
+          "id": "openai/gpt-6.1-sol",
+          "variant": "high"
+        },
+        "claude-code/claude-sonnet-5-5"
+      ],
+      "prompt": "Perform the final independent audit for CRITICAL project work. Assume the change is wrong until the evidence proves otherwise. Check every stated invariant, risk, rollback condition, test result, and unresolved uncertainty. Return PASS or FAIL; never waive a critical gap. Do not modify files.",
+      "permission": {
+        "edit": "deny"
+      }
+    },
+    "paid-fixer": {
+      "model": "deepseek/deepseek-flash",
+      "prompt": "Act as a paid implementation escalation lane for the project. Use only when the orchestrator has explicit reason to escalate beyond the free implementation lanes. Implement only the approved scope, add focused tests, avoid unrelated refactors, and report changes and validation clearly."
+    }
+  }
+}
