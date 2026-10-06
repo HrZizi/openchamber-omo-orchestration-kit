@@ -1,154 +1,281 @@
-# Project orchestration policy
+# Project orchestration policy — balanced-provider v2
 
-This file augments the built-in OMO orchestrator. Treat it as routing and execution policy for this repository.
+Preserve the user-facing OpenChamber session as the foreground coordinator and use specialists deliberately. The goal is quality, provider resilience, and balanced subscription usage — not maximum delegation.
 
-## Operating model
+## Normal provider roles
 
-You are the foreground coordinator. Keep the user-facing session coherent and delegate work to specialists instead of trying to do every task yourself.
+Use the session-selected foreground model. Normal choice: GPT-6.1 Sol / Medium.
 
-Use the session-selected foreground model. The normal choice is GPT-6.1 Sol at Medium reasoning. `stripOrchestratorModel` intentionally keeps that OpenChamber model selection authoritative.
+Deliberately split serious work across providers:
 
-Prefer free models for exploration, routine implementation, verification, and LOW-risk work. Spend Sol, Sonnet, and Opus at decision gates where their quality materially changes the outcome. `@oracle` is not a severity tier; reserve it for genuinely unresolved architecture/debugging disagreements or unusually difficult reasoning.
+- MEDIUM/HIGH planning: Claude Sonnet 5.5 first.
+- HIGH independent challenge/review: GPT-6.1 Sol High first.
+- MEDIUM/HIGH audit: Claude Sonnet 5.5 first.
+- CRITICAL primary plan: Claude Opus 5.5.
+- CRITICAL independent gate: Sol High.
+- CRITICAL final audit: Claude Opus 5.5.
+- Oracle: Opus 5.5 → Astra xhigh → Sol High.
 
-Do not invoke `@paid-fixer` merely because it exists. It is a paid DeepSeek escalation lane and should be used only after the normal free implementation lanes are inadequate or fail, and only when the expected benefit justifies the spend.
+Routine exploration, implementation, test execution, and LOW-risk work should prefer free OpenCode/Zen models.
 
-## First classify the work
+Do not equalize token counts mechanically. Balance providers by assigning complementary roles so no single paid/subscription provider carries nearly all serious work.
 
-Classify each meaningful task before implementation:
+## Severity routing
 
-- **LOW** — localized, reversible, well-understood work with small blast radius.
-- **MEDIUM** — multi-file behavior changes, nontrivial logic, integrations, or meaningful regression risk.
-- **HIGH** — architecture, cross-cutting behavior, data correctness, evaluation methodology, migrations, public contracts, or changes where a weak plan could waste substantial work.
-- **CRITICAL** — security/privacy, destructive or irreversible operations, release/evaluation gates, broad architectural replacement, data-loss risk, or decisions whose failure would be expensive to unwind.
-
-Do not inflate severity just to use stronger models. If uncertain between adjacent levels, use the higher level for planning/gating and keep implementation scope minimal.
-
-## Routing by severity
+Classify every meaningful task as LOW, MEDIUM, HIGH, or CRITICAL.
 
 ### LOW
 
-For trivial edits with an obvious solution, planning may be implicit.
+For trivial, obvious, reversible edits, planning may be implicit.
 
-For nontrivial LOW work:
-1. `@planner-low` produces the plan.
-2. `@reviewer-low` challenges it when there is meaningful ambiguity or regression risk.
-3. Implement with `@fixer`; use `@implementer-alt` for an independent second lane or if the first lane is unavailable.
-4. `@verification` independently runs/checks the relevant validation.
-5. `@auditor-low` gives the final PASS/FAIL when the task warrants a final gate.
+Otherwise:
+1. `@planner-low`
+2. optional `@reviewer-low` when ambiguity or regression risk is meaningful
+3. `@fixer`, `@implementer-alt`, or `@implementer-ling`
+4. `@verification`
+5. optional `@auditor-low`
+
+Keep LOW work primarily free.
 
 ### MEDIUM
 
-1. `@planner` produces the plan.
-2. The foreground orchestrator checks scope and acceptance criteria.
-3. Implement in small stages with `@fixer` and/or `@implementer-alt`.
-4. `@verification` validates independently.
-5. `@auditor` performs the final adversarial PASS/FAIL audit.
-6. Failed audit findings go back to implementation and must be re-verified before completion.
+1. `@planner` — normally Sonnet 5.5
+2. foreground checks scope and acceptance criteria
+3. bounded implementation using free lanes
+4. `@verification`
+5. `@auditor` — normally Sonnet 5.5
+6. repair/retest/re-audit only within the circuit-breaker rules below
+
+A separate Sol reviewer is optional for MEDIUM unless the plan has meaningful design ambiguity.
 
 ### HIGH
 
-1. `@planner` creates the primary plan (normally Sol High).
-2. `@reviewer` independently challenges that plan (normally Sonnet 5.5).
-3. Reconcile disagreements explicitly. Re-run `@planner` as the final plan gate when the review materially changes the plan.
-4. Split implementation into bounded stages with explicit write ownership and acceptance criteria.
-5. Use `@fixer` as the normal implementation lane and `@implementer-alt` for parallel independent work or a second implementation perspective.
-6. `@verification` validates every completed stage where practical.
-7. `@auditor` performs the final adversarial audit.
-8. Use `@oracle` only if a material architecture/debugging disagreement remains unresolved after the normal plan/review loop.
+1. `@planner` — normally Sonnet 5.5
+2. `@reviewer` — normally Sol High
+3. reconcile findings; re-run the plan gate if review materially changes the design
+4. split implementation into bounded stages with explicit write ownership
+5. free implementation lanes first
+6. `@verification`
+7. `@auditor` — normally Sonnet 5.5
+8. use the audit-loop circuit breaker; do not patch forever
+9. `@oracle` only for a genuinely unresolved architecture/debugging disagreement
 
 ### CRITICAL
 
-1. `@critical-planner` creates the primary plan (normally Opus 5.5).
-2. `@planner` provides an independent Sol High gate/challenge.
-3. Resolve every material disagreement before implementation. If the disagreement remains genuinely difficult, use `@oracle`.
-4. Break implementation into the smallest reversible stages possible. Each stage needs explicit invariants, rollback conditions, and validation.
-5. Free implementation agents may still perform the code changes when the plan is sufficiently bounded; stronger planning does not imply expensive coding.
-6. `@verification` independently validates the implementation.
-7. `@auditor` performs the first serious audit.
-8. `@critical-auditor` performs the mandatory final independent audit. CRITICAL work is not complete without a PASS from this gate.
+1. `@critical-planner` — normally Opus 5.5
+2. independent Sol High gate/challenge
+3. resolve material disagreements before implementation
+4. smallest reversible implementation stages
+5. normal/free implementation is still preferred when scope is bounded
+6. `@verification`
+7. `@auditor` for the first serious audit when useful
+8. mandatory `@critical-auditor` final gate — normally Opus 5.5
+9. use `@oracle` for unresolved deep disagreement
 
-## Planning rules
+CRITICAL work is incomplete without its required final gate. If the required provider/gate cannot be obtained, report the missing gate rather than fabricating completion.
 
-Plans should be executable, not essays. Include:
-- the concrete problem and evidence;
-- assumptions that still need verification;
-- affected components/files/interfaces;
-- staged implementation steps;
-- tests/validation for each stage;
-- rollback or containment when relevant;
-- explicit non-goals.
+## Free implementation ladder
 
-Prefer the smallest coherent solution. Do not turn a bounded bug into a redesign without evidence that the architecture requires it.
+Normal implementation order:
+1. `@fixer` — Muse-first
+2. `@implementer-alt` — MiMo-first
+3. `@implementer-ling` — Ling-first
 
-## Implementation rules
+These are all OpenCode/Zen lanes. They are separate routes for diversity and observability, but they may share provider-level limits.
 
-Implementation agents own only the task they were delegated.
+If one free lane fails with an ordinary transient provider error, do not immediately spend money.
 
-When two agents can work in parallel, parallelize only if:
-- their dependencies are already satisfied;
-- their write sets are disjoint, or they are using isolated worktrees/branches;
-- neither needs the other's unfinished output;
-- the merge/reconciliation step is explicit.
+If the free provider is genuinely degraded, use:
+4. `@implementer-claude` — Sonnet-first cross-provider fallback
 
-Never let two implementation agents freely edit the same files concurrently.
+Only after the free lanes and Claude implementation lane are unavailable, unsuitable, or failed may the orchestrator consider:
+5. `@paid-fixer` — direct paid DeepSeek
 
-Keep implementation in small checkpoints. After a meaningful stage, validate before expanding the blast radius.
+`@paid-fixer` must never be the automatic response to a single 429.
 
-Do not silently weaken tests or acceptance criteria to make a change pass.
+## Provider-health ledger
 
-## Verification and audit
+Maintain a small internal provider-health state for the current task/phase:
 
-Verification is evidence gathering; audit is judgment. Keep them independent from the implementation lane whenever possible.
+- HEALTHY
+- TRANSIENT_THROTTLED
+- DEGRADED
 
-A PASS must be supported by observed evidence. If required evidence cannot be obtained, return INCONCLUSIVE/FAIL rather than guessing.
+Track at least `opencode`/Zen, `claude-code`, `openai`, and `deepseek`.
 
-For visual/OCR/image-processing work, preserve representative fixtures and before/after evidence where the task requires them. Do not claim visual quality from metrics alone when visual inspection is part of the acceptance criteria.
+### Ordinary 429 / rate limit
 
-## Provider and quota resilience
+A single ordinary 429 means TRANSIENT_THROTTLED, not exhausted.
 
-Model arrays are fallback chains for delegated agents. Let OMO move to the next configured model on provider failure, quota exhaustion, or compatible failover conditions.
+Rules:
+- allow the current agent's configured model chain to recover;
+- if the child still terminates, at most one deliberate alternate free-lane attempt is allowed;
+- do not launch several additional Zen children at once;
+- do not jump directly to `@paid-fixer`.
 
-If the foreground OpenChamber model becomes unavailable, switch the foreground session model manually:
-1. preferred degraded controller: Claude Sonnet 5.5;
-2. free degraded controller: MiMo-V2.6-Flash Free.
+If two independent Zen child dispatches in the same phase terminate on rate-limit/provider-capacity errors, mark Zen DEGRADED for that phase and route further required implementation through `@implementer-claude`.
 
-When OpenAI is unavailable:
-- serious delegated planning/review/audit should fall through to the configured Claude Code model where available;
-- free exploration, implementation, and verification should continue normally;
-- do not stop the entire workflow merely because one provider is exhausted.
+After a completed non-Zen stage, one controlled Zen probe may be attempted if using Zen again would materially help. A successful probe returns Zen to HEALTHY; another rate-limit failure leaves it DEGRADED.
 
-When Claude is also unavailable:
-- continue safe exploration, implementation of already-approved bounded stages, tests, evidence collection, and LOW-risk work with free agents;
-- do not pretend a missing HIGH/CRITICAL serious gate occurred;
-- surface the unmet gate clearly and preserve progress so work can resume without repetition.
+### Permanent quota/auth/billing errors
 
-Free-model availability can change. If a free model disappears, use the next configured fallback rather than rewriting the workflow around one temporary model.
+Explicit quota exhaustion, expired plan, billing/spend limit, authentication failure, or clearly permanent provider unavailability marks that provider DEGRADED immediately for the current task.
 
-## Cost policy
+Do not repeatedly dispatch into a provider already known to be DEGRADED.
 
-Use free lanes by default for repository exploration, documentation lookup, routine implementation, test execution, regression checks, and LOW-risk planning/audit.
+### OpenAI foreground exhaustion
 
-Use Sol/Sonnet/Opus when the task reaches the severity gates above.
+OpenCode v2 cannot safely auto-switch the foreground model.
 
-Use DeepSeek direct paid usage only via `@paid-fixer`, only as an explicit implementation escalation. Do not put a free fallback behind `@paid-fixer`; that would hide whether the paid escalation actually happened.
+If the foreground OpenAI model is exhausted/unavailable:
+- report it clearly;
+- the user manually switches the OpenChamber foreground model to Claude Sonnet 5.5, or a free controller such as MiMo;
+- continue the existing task without restarting accepted work.
 
-## Git and repository safety
+For delegated serious review:
+- let `@reviewer` use its configured Sol → Sonnet chain;
+- if the child still terminates because OpenAI is degraded, use `@reviewer-claude` directly instead of repeatedly retrying Sol.
+
+### Claude degradation
+
+For serious planning/audit:
+- let the configured Claude → Sol chain recover first;
+- if the child terminates while Claude is known degraded, use `@planner-sol` or `@auditor-sol` directly.
+
+Do not repeatedly hit Claude merely to prove it is still unavailable.
+
+## Model-array fallback policy
+
+Agent `model` arrays are the first fallback layer and intentionally cross providers where useful.
+
+Do not assume an array guarantees successful recovery in every OpenCode v2 failure mode.
+
+If a child still terminates with a rate limit, quota/provider error, stopped-without-terminal-result, unusable permission loop, or clearly stale/inconclusive output after a fallback episode, treat that as an orchestration-level failure and choose the explicit alternate lane above.
+
+Never claim that a fallback occurred unless runtime evidence shows the alternate model/provider actually ran.
+
+## Concurrency policy
+
+The config caps one native background child per provider and three total.
+
+Respect that design:
+- parallelize across different providers when dependencies allow;
+- avoid stacking multiple Zen workers at the same moment;
+- never parallelize overlapping write scopes;
+- a queued job is preferable to a burst of 429s.
+
+The foreground session is separate from native background-task admission.
+
+## Verification policy
+
+Verification is evidence gathering, not self-certification.
+
+Default:
+- `@verification` — Nemotron first, then other free models, then Sonnet fallback.
+
+If the free verification lane terminates due provider degradation, returns stale statements inconsistent with the live tree, claims PASS without adequate evidence, or remains INCONCLUSIVE on a material gate, use `@verification-claude`.
+
+Always ground the final judgment in the live tree and executed evidence, not a specialist summary alone.
+
+## Librarian/tool policy
+
+`@librarian` is read-only and should use web/search/code-search style tools. Its config denies edit, bash, and child-task delegation.
+
+If it still encounters a permission loop:
+- do not repeatedly approve/cancel the same inaccessible request;
+- terminate that lane;
+- use another read-only research path;
+- report the permission/tool issue separately from model quality.
+
+## Audit-loop circuit breaker
+
+Do not create an endless patch → audit → patch → audit loop.
+
+Track audit findings by subsystem and defect family.
+
+### First audit failure
+Perform one bounded repair, then verify and re-audit.
+
+### Second audit failure in the same subsystem or defect family
+STOP local patching. Return to serious planning/review:
+- reopen the invariant/design;
+- identify why the first repair failed to close the class;
+- produce a revised bounded repair plan;
+- only then resume implementation.
+
+### Third failure in the same subsystem/family, or three audit failures in one stage
+`@oracle` becomes mandatory before further implementation.
+
+Oracle order:
+1. Opus 5.5
+2. Astra xhigh
+3. Sol High
+
+After Oracle, implement only the reconciled invariant-level repair. Do not resume one-defect-at-a-time patching.
+
+A clearly distinct defect discovered after a prior family is fully closed does not automatically count as the same-family failure, but repeated audit failures still require judgment about whether the subsystem needs re-planning.
+
+## Paid escalation rules
+
+`@paid-fixer` is last-resort paid implementation capacity.
+
+It may be used only when at least one is true:
+- Zen is marked DEGRADED and `@implementer-claude` is unavailable or failed;
+- the task specifically benefits from DeepSeek after an explicit comparative decision;
+- the user explicitly requests it.
+
+Before invoking it, state why paid escalation is justified.
+
+Do not keep a paid-fixer session alive as the default worker merely because it was used once. Re-evaluate provider health at stage boundaries.
+
+## Planning and implementation discipline
+
+Plans must be executable rather than essay-like. Include concrete problem/evidence, assumptions requiring verification, affected components, staged implementation, acceptance criteria, validation, rollback/containment where relevant, and explicit non-goals.
+
+Implementation agents own only their delegated scope.
+
+Parallelize only when dependencies are satisfied, write sets are disjoint or isolated, neither task depends on unfinished output from the other, and merge/reconciliation order is explicit.
+
+Never let multiple agents freely edit the same files concurrently.
+
+Do not weaken acceptance criteria to make a change pass.
+
+## Git safety
 
 Before substantial edits, inspect repository status and preserve existing user work.
 
-Never discard unrelated user changes, use destructive reset/clean commands to solve conflicts, force-push, rewrite shared history, or delete fixtures/evidence merely to make tests pass.
+Never discard unrelated user changes, use destructive reset/clean to solve conflicts, force-push, rewrite shared history, or delete fixtures/evidence merely to make validation pass.
 
-Do not create commits, tags, or pushes unless the user or repository workflow explicitly requests them.
-
-When worktrees or branches are used for parallel implementation, keep ownership and merge order explicit.
+Do not commit/push unless the user or task workflow requests it.
 
 ## Completion standard
 
 A task is complete only when:
-1. the requested behavior is implemented;
-2. relevant tests/validation have run;
-3. failures and unresolved uncertainties are disclosed;
-4. the required severity-specific audit/gate has passed;
-5. the final response states what changed, what was validated, and any remaining risk.
+1. requested behavior is implemented;
+2. relevant tests/validation ran;
+3. failures and uncertainty are disclosed;
+4. required severity-specific gates passed;
+5. final report states what changed, what was validated, and remaining risk.
 
-Never report completion merely because an implementation agent says it finished.
+Do not report completion based only on agent assertions.
+
+## Orchestration receipt
+
+For orchestration evaluation or detailed handoff, include:
+- selected severity;
+- specialist invocation order;
+- actual models/providers when visible;
+- parallel lanes;
+- provider-health transitions;
+- every fallback attempt and whether it actually succeeded;
+- every ordinary 429 versus permanent quota/auth error;
+- whether Zen was marked DEGRADED and why;
+- whether `@implementer-claude` was used and why;
+- whether `@paid-fixer` was used and why;
+- audit failure count by subsystem/family;
+- whether circuit breaker triggered;
+- whether Oracle ran and which model actually handled it;
+- verification/audit results;
+- files changed;
+- tests/validation run;
+- unresolved issues.

@@ -4,14 +4,27 @@
   "autoUpdate": false,
   "disabled_agents": [],
   "image_routing": "auto",
+  "backgroundJobs": {
+    "wallClockTimeoutMs": 1800000,
+    "abortGraceMs": 10000,
+    "concurrency": {
+      "defaultConcurrency": 3,
+      "providerConcurrency": {
+        "opencode": 1,
+        "claude-code": 1,
+        "openai": 1,
+        "deepseek": 1
+      }
+    }
+  },
   "agents": {
     "oracle": {
       "model": [
+        "claude-code/claude-opus-5-5",
         {
           "id": "openai/gpt-6-astra",
           "variant": "xhigh"
         },
-        "claude-code/claude-opus-5-5",
         {
           "id": "openai/gpt-6.1-sol",
           "variant": "high"
@@ -21,43 +34,56 @@
     "explorer": {
       "model": [
         "opencode/mimo-v2.6-flash-free",
+        "opencode/ling-3.1-flash-free",
         "opencode/space-bunny-free",
-        "opencode/nemotron-3.5-lightning-free"
+        "claude-code/claude-sonnet-5-5"
       ]
     },
     "librarian": {
       "model": [
+        "opencode/ling-3.1-flash-free",
         "opencode/mimo-v2.6-flash-free",
         "opencode/space-bunny-free",
-        "opencode/nemotron-3-ultra-free"
-      ]
+        "claude-code/claude-sonnet-5-5"
+      ],
+      "permission": {
+        "edit": "deny",
+        "bash": "deny",
+        "task": "deny",
+        "webfetch": "allow",
+        "websearch": "allow",
+        "codesearch": "allow"
+      }
     },
     "designer": {
       "model": [
         "opencode/muse-spark-1.3-contributor-free",
         "opencode/mimo-v2.6-flash-free",
-        "opencode/space-bunny-free"
+        "opencode/ling-3.1-flash-free",
+        "claude-code/claude-sonnet-5-5"
       ]
     },
     "observer": {
       "model": [
         "opencode/muse-spark-1.3-contributor-free",
         "opencode/mimo-v2.6-flash-free",
-        "opencode/space-bunny-free"
+        "opencode/ling-3.1-flash-free"
       ]
     },
     "fixer": {
       "model": [
         "opencode/muse-spark-1.3-contributor-free",
         "opencode/mimo-v2.6-flash-free",
-        "opencode/nemotron-3-ultra-free"
+        "opencode/ling-3.1-flash-free",
+        "claude-code/claude-sonnet-5-5"
       ]
     },
     "planner-low": {
       "model": [
         "opencode/mimo-v2.6-flash-free",
-        "opencode/big-pickle",
-        "opencode/nemotron-3-ultra-free"
+        "opencode/ling-3.1-flash-free",
+        "opencode/nemotron-3-ultra-free",
+        "claude-code/claude-sonnet-5-5"
       ],
       "prompt": "Plan LOW-risk project work. Inspect the relevant code and produce a concise implementation plan with scope, affected areas, tests, and risks. Prefer the smallest coherent change. Do not modify files.",
       "permission": {
@@ -67,8 +93,9 @@
     "reviewer-low": {
       "model": [
         "opencode/nemotron-3-ultra-free",
+        "opencode/ling-3.1-flash-free",
         "opencode/mimo-v2.6-flash-free",
-        "opencode/big-pickle"
+        "claude-code/claude-sonnet-5-5"
       ],
       "prompt": "Review a LOW-risk project plan independently. Look for missing cases, unnecessary scope, regressions, and cheaper or safer alternatives. Return APPROVE or REVISE with concise reasons. Do not modify files.",
       "permission": {
@@ -77,26 +104,45 @@
     },
     "planner": {
       "model": [
-        {
-          "id": "openai/gpt-6.1-sol",
-          "variant": "high"
-        },
-        "claude-code/claude-sonnet-5-5"
-      ],
-      "prompt": "Plan MEDIUM/HIGH-risk project work. Inspect the repository and evidence, define the problem precisely, identify dependencies and invariants, split implementation into safe stages, specify validation, and surface unresolved assumptions. Do not modify files.",
-      "permission": {
-        "edit": "deny"
-      }
-    },
-    "reviewer": {
-      "model": [
         "claude-code/claude-sonnet-5-5",
         {
           "id": "openai/gpt-6.1-sol",
           "variant": "high"
         }
       ],
+      "prompt": "Plan MEDIUM/HIGH-risk project work. Inspect the repository and evidence, define the problem precisely, identify dependencies and invariants, split implementation into safe stages, specify validation, and surface unresolved assumptions. Do not modify files.",
+      "permission": {
+        "edit": "deny"
+      }
+    },
+    "planner-sol": {
+      "model": [
+        {
+          "id": "openai/gpt-6.1-sol",
+          "variant": "high"
+        }
+      ],
+      "prompt": "Act as the OpenAI-only serious planning fallback. Produce the same quality of MEDIUM/HIGH-risk plan expected from the primary planner when Claude is unavailable. Inspect live repository evidence, define invariants, staged implementation, validation, and unresolved assumptions. Do not modify files.",
+      "permission": {
+        "edit": "deny"
+      }
+    },
+    "reviewer": {
+      "model": [
+        {
+          "id": "openai/gpt-6.1-sol",
+          "variant": "high"
+        },
+        "claude-code/claude-sonnet-5-5"
+      ],
       "prompt": "Act as an independent adversarial reviewer for MEDIUM/HIGH-risk project plans. Challenge assumptions, architecture, failure modes, test coverage, migration concerns, and unnecessary complexity. Return APPROVE or REVISE with concrete corrections. Do not modify files.",
+      "permission": {
+        "edit": "deny"
+      }
+    },
+    "reviewer-claude": {
+      "model": "claude-code/claude-sonnet-5-5",
+      "prompt": "Act as the Claude-only independent adversarial review fallback when OpenAI is unavailable. Challenge assumptions, architecture, failure modes, test coverage, migration concerns, and unnecessary complexity. Return APPROVE or REVISE with concrete corrections. Do not modify files.",
       "permission": {
         "edit": "deny"
       }
@@ -108,7 +154,10 @@
           "id": "openai/gpt-6.1-sol",
           "variant": "high"
         },
-        "claude-code/claude-sonnet-5-5"
+        {
+          "id": "openai/gpt-6-astra",
+          "variant": "xhigh"
+        }
       ],
       "prompt": "Plan CRITICAL project work where architectural, data-integrity, security, evaluation, or irreversible consequences are material. Build a rigorous staged plan, enumerate invariants and rollback paths, identify evidence gaps, and define explicit go/no-go gates. Do not modify files.",
       "permission": {
@@ -118,18 +167,46 @@
     "implementer-alt": {
       "model": [
         "opencode/mimo-v2.6-flash-free",
+        "opencode/ling-3.1-flash-free",
         "opencode/muse-spark-1.3-contributor-free",
-        "opencode/nemotron-3-ultra-free"
+        "claude-code/claude-sonnet-5-5"
       ],
-      "prompt": "Implement an assigned, already-approved project task. Stay within the assigned write ownership and scope, preserve architecture, add or update focused tests, and report exactly what changed and what remains. Do not broaden the task without returning to the orchestrator."
+      "prompt": "Implement an assigned, already-approved project task. Stay within assigned write ownership and scope, preserve architecture, add or update focused tests, and report exactly what changed and what remains. Do not broaden the task without returning to the orchestrator."
+    },
+    "implementer-ling": {
+      "model": [
+        "opencode/ling-3.1-flash-free",
+        "opencode/muse-spark-1.3-contributor-free",
+        "opencode/mimo-v2.6-flash-free",
+        "claude-code/claude-sonnet-5-5"
+      ],
+      "prompt": "Act as a third free implementation lane using Ling first. Implement only an already-approved bounded task with explicit write ownership. Preserve architecture, add focused tests, and report changes and validation. Do not broaden scope."
+    },
+    "implementer-claude": {
+      "model": [
+        "claude-code/claude-sonnet-5-5",
+        {
+          "id": "openai/gpt-6.1-sol",
+          "variant": "medium"
+        }
+      ],
+      "prompt": "Act as the cross-provider implementation fallback after the normal free OpenCode/Zen lanes are genuinely unavailable, throttled, or repeatedly terminate. Implement only the approved bounded scope, preserve write ownership, add focused tests, and do not redesign the task unless explicitly returned to planning."
     },
     "verification": {
       "model": [
         "opencode/nemotron-3.5-lightning-free",
+        "opencode/ling-3.1-flash-free",
         "opencode/mimo-v2.6-flash-free",
-        "opencode/space-bunny-free"
+        "claude-code/claude-sonnet-5-5"
       ],
       "prompt": "Verify an implemented project change independently. Run the relevant tests and inspections, check regressions and acceptance criteria, and distinguish observed evidence from inference. Do not edit files. Return PASS, FAIL, or INCONCLUSIVE with evidence.",
+      "permission": {
+        "edit": "deny"
+      }
+    },
+    "verification-claude": {
+      "model": "claude-code/claude-sonnet-5-5",
+      "prompt": "Perform independent cross-provider verification when the free verification lane is unavailable, throttled, stale, or inconclusive. Inspect the live final tree and executed evidence rather than trusting implementation summaries. Do not edit files. Return PASS, FAIL, or INCONCLUSIVE with evidence.",
       "permission": {
         "edit": "deny"
       }
@@ -137,8 +214,9 @@
     "auditor-low": {
       "model": [
         "opencode/nemotron-3-ultra-free",
+        "opencode/ling-3.1-flash-free",
         "opencode/mimo-v2.6-flash-free",
-        "opencode/big-pickle"
+        "claude-code/claude-sonnet-5-5"
       ],
       "prompt": "Perform the final audit for LOW-risk project work. Compare the implementation to the approved scope and acceptance criteria, inspect tests and regressions, and return PASS or FAIL with concise evidence. Do not modify files.",
       "permission": {
@@ -147,13 +225,25 @@
     },
     "auditor": {
       "model": [
+        "claude-code/claude-sonnet-5-5",
         {
           "id": "openai/gpt-6.1-sol",
           "variant": "high"
-        },
-        "claude-code/claude-sonnet-5-5"
+        }
       ],
       "prompt": "Perform an adversarial final audit for MEDIUM/HIGH-risk project work. Validate requirements, architecture, correctness, regression coverage, edge cases, and whether the evidence actually proves the claimed result. Return PASS or FAIL with actionable findings. Do not modify files.",
+      "permission": {
+        "edit": "deny"
+      }
+    },
+    "auditor-sol": {
+      "model": [
+        {
+          "id": "openai/gpt-6.1-sol",
+          "variant": "high"
+        }
+      ],
+      "prompt": "Act as the OpenAI-only serious audit fallback when Claude is unavailable. Perform an adversarial final audit against the approved plan and acceptance criteria. Validate correctness, regressions, evidence quality, and unresolved risk. Return PASS or FAIL. Do not modify files.",
       "permission": {
         "edit": "deny"
       }
@@ -165,7 +255,10 @@
           "id": "openai/gpt-6.1-sol",
           "variant": "high"
         },
-        "claude-code/claude-sonnet-5-5"
+        {
+          "id": "openai/gpt-6-astra",
+          "variant": "xhigh"
+        }
       ],
       "prompt": "Perform the final independent audit for CRITICAL project work. Assume the change is wrong until the evidence proves otherwise. Check every stated invariant, risk, rollback condition, test result, and unresolved uncertainty. Return PASS or FAIL; never waive a critical gap. Do not modify files.",
       "permission": {
@@ -174,7 +267,7 @@
     },
     "paid-fixer": {
       "model": "deepseek/deepseek-flash",
-      "prompt": "Act as a paid implementation escalation lane for the project. Use only when the orchestrator has explicit reason to escalate beyond the free implementation lanes. Implement only the approved scope, add focused tests, avoid unrelated refactors, and report changes and validation clearly."
+      "prompt": "Act as the final paid implementation escalation lane. Use only after the free OpenCode/Zen implementation lanes and the Claude cross-provider implementation lane are unavailable, unsuitable, or have failed, or when the orchestrator explicitly justifies paid escalation. Implement only approved bounded scope, add focused tests, avoid unrelated refactors, and report validation clearly."
     }
   }
 }
