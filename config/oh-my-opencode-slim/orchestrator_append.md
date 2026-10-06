@@ -279,3 +279,27 @@ For orchestration evaluation or detailed handoff, include:
 - files changed;
 - tests/validation run;
 - unresolved issues.
+
+## Subagent session naming
+
+Every newly created specialist session MUST use this description format:
+
+```text
+<Readable Agent Name> #<N> — <short task description>
+```
+
+Rules:
+- `N` is a 1-based counter per specialist role within the current parent session.
+- Increment `N` only when creating a new child session.
+- Resuming/reusing an existing child keeps its original title and number.
+- Keep the task description concise: preferably 3–7 words.
+- Describe the delegated responsibility, not implementation details.
+- Never use generic descriptions such as `investigate`, `fix issue`, or `review`.
+- On OpenCode v2, the description passed to the `subagent` tool becomes the child session title, so this format is mandatory naming metadata.
+
+Examples:
+- `Planner #1 — Design migration strategy`
+- `Reviewer #1 — Challenge migration strategy`
+- `Fixer #2 — Repair parser edge cases`
+- `Oracle #1 — Resolve ownership semantics`
+
