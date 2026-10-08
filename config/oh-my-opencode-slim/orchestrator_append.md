@@ -1,4 +1,4 @@
-# Project orchestration policy — balanced-provider v2
+# Project orchestration policy — balanced-provider v2.1
 
 Preserve the user-facing OpenChamber session as the foreground coordinator and use specialists deliberately. The goal is quality, provider resilience, and balanced subscription usage — not maximum delegation.
 
@@ -76,22 +76,44 @@ CRITICAL work is incomplete without its required final gate. If the required pro
 
 ## Free implementation ladder
 
-Normal implementation order:
+For approved bounded implementation work, use the free OpenCode/Zen lanes first:
 1. `@fixer` — Muse-first
 2. `@implementer-alt` — MiMo-first
 3. `@implementer-ling` — Ling-first
 
-These are all OpenCode/Zen lanes. They are separate routes for diversity and observability, but they may share provider-level limits.
+These share Zen provider capacity. Do not attempt all three in a burst or keep trying Zen when Zen is known DEGRADED. One ordinary 429 is TRANSIENT_THROTTLED, not quota exhaustion. If a child terminates, permit at most one controlled alternate free-lane attempt before reassessment.
 
-If one free lane fails with an ordinary transient provider error, do not immediately spend money.
+For genuine Zen degradation, unavailability, or an approved task requiring a subscription model, use:
+4. `@subscription-implementer` — Haiku 5.5 → Luna → Sonnet 5.5 → Sol Medium
 
-If the free provider is genuinely degraded, use:
-4. `@implementer-claude` — Sonnet-first cross-provider fallback
-
-Only after the free lanes and Claude implementation lane are unavailable, unsuitable, or failed may the orchestrator consider:
+Only after the subscription path is unavailable, unsuitable, or has failed — or a documented comparative/user exception applies — may the orchestrator consider:
 5. `@paid-fixer` — direct paid DeepSeek
 
-`@paid-fixer` must never be the automatic response to a single 429.
+A single ordinary 429 NEVER justifies direct paid DeepSeek.
+
+## Lightweight subscription fallback policy
+
+Our reciprocal provider strategy adds lightweight subscription models **only to operational agents**:
+- `@explorer`: MiMo → Ling → Space Bunny → **Luna → Haiku** → Sonnet.
+- `@librarian`: Ling → MiMo → Space Bunny → **Luna → Haiku** → Sonnet (keep read-only restrictions).
+- `@observer`: Muse → MiMo → Ling → **Luna → Haiku** → Sonnet (test real image access).
+- `@designer`: Muse → MiMo → Ling → **Haiku → Luna** → Sonnet.
+- `@fixer`: Muse → MiMo → Ling → **Haiku → Luna** → Sonnet.
+- `@implementer-alt`: MiMo → Ling → Muse → **Haiku → Luna** → Sonnet.
+- `@implementer-ling`: Ling → Muse → MiMo → **Haiku → Luna** → Sonnet.
+- `@subscription-implementer`: **Haiku → Luna → Sonnet → Sol Medium**.
+
+Do NOT alter LOW planning or LOW review chains; especially do not introduce Luna into `@planner-low` or Haiku into `@reviewer-low`. Keep all serious planning, review, verification, audit, critical and Oracle model chains unchanged.
+
+A configured model array expresses preference for supported model *errors*. It is NOT a validator of successfully completed but incorrect code. After a quality failure, use independent verification and explicit stronger-model repair without bypassing the audit circuit breaker.
+
+Cross-provider model-array retries are not guaranteed on all OpenCode v2 failure modes. Also note that a free-first agent's array might try a subscription fallback after an ordinary single 429 before the coordinator establishes Zen DEGRADED. Do not claim the static array mechanically enforces the policy escalation threshold; record actual provider transitions.
+
+Use the provider-health ledger to avoid known-DEGRADED providers if an explicit safe model selection is supported at dispatch. Static arrays do not intrinsically skip unavailable providers; if a safe override isn't possible, observe runtime recovery or stop/report and re-route. No increase to provider or global concurrency is authorized.
+
+## Observer visual reliability
+
+The Observer keeps `image_routing: "auto"`, and the existing free head, then Luna/Haiku/Sonnet subscription fallbacks. Both lightweight subscription models support image input at the model layer; that is not proof every OpenChamber host bridge does. Require real screenshot dispatch tests and never present text-only guesses as image evidence.
 
 ## Provider-health ledger
 
@@ -113,7 +135,7 @@ Rules:
 - do not launch several additional Zen children at once;
 - do not jump directly to `@paid-fixer`.
 
-If two independent Zen child dispatches in the same phase terminate on rate-limit/provider-capacity errors, mark Zen DEGRADED for that phase and route further required implementation through `@implementer-claude`.
+If two independent Zen child dispatches in the same phase terminate on rate-limit/provider-capacity errors, mark Zen DEGRADED for that phase and route further required implementation through `@subscription-implementer`.
 
 After a completed non-Zen stage, one controlled Zen probe may be attempted if using Zen again would materially help. A successful probe returns Zen to HEALTHY; another rate-limit failure leaves it DEGRADED.
 
@@ -220,7 +242,7 @@ A clearly distinct defect discovered after a prior family is fully closed does n
 `@paid-fixer` is last-resort paid implementation capacity.
 
 It may be used only when at least one is true:
-- Zen is marked DEGRADED and `@implementer-claude` is unavailable or failed;
+- Zen is marked DEGRADED and `@subscription-implementer` is unavailable, unsuitable, or failed;
 - the task specifically benefits from DeepSeek after an explicit comparative decision;
 - the user explicitly requests it.
 
@@ -270,7 +292,7 @@ For orchestration evaluation or detailed handoff, include:
 - every fallback attempt and whether it actually succeeded;
 - every ordinary 429 versus permanent quota/auth error;
 - whether Zen was marked DEGRADED and why;
-- whether `@implementer-claude` was used and why;
+- whether `@subscription-implementer` was used and why;
 - whether `@paid-fixer` was used and why;
 - audit failure count by subsystem/family;
 - whether circuit breaker triggered;

@@ -1,4 +1,4 @@
-# OpenChamber + OMO Balanced-Provider v2 Setup
+# OpenChamber + OMO Balanced-Provider v2.1 Setup
 
 **Target:** OpenChamber Desktop + OpenCode 2.x + oh-my-opencode-slim 3.0.2  
 **Platforms:** macOS and native Windows  
@@ -140,6 +140,7 @@ The config references:
 ```text
 openai/gpt-6.1-sol
 openai/gpt-6-astra
+openai/gpt-6-luna
 ```
 
 Normal foreground choice:
@@ -164,6 +165,7 @@ Settings
 The config currently references:
 
 ```text
+claude-code/claude-haiku-5-5
 claude-code/claude-sonnet-5-5
 claude-code/claude-opus-5-5
 ```
@@ -210,7 +212,7 @@ npx oh-my-opencode-slim@3.0.2 doctor
 Remove-Item Env:OPENCODE_CONFIG_DIR
 ```
 
-Do not continue until both user/project config checks are clean.
+Require the project config to be valid and the doctor command to exit successfully. The user-level config is optional and may legitimately display `[user] No config file found`. A successful doctor checks configuration, NOT that every provider/model/image route executes.
 
 ## 7. Expected specialist roster
 
@@ -224,7 +226,7 @@ designer
 explorer
 fixer
 implementer-alt
-implementer-claude
+subscription-implementer
 implementer-ling
 librarian
 observer
@@ -291,32 +293,39 @@ Opus
 → Sol High
 ```
 
-## 9. Free implementation ladder
+## 9. Free-first and subscription fallback
+
+Operational model routing in v2.1:
 
 ```text
-fixer:
-Muse → MiMo → Ling → Sonnet
+fixer               Muse → MiMo → Ling → Haiku → Luna → Sonnet
+implementer-alt     MiMo → Ling → Muse → Haiku → Luna → Sonnet
+implementer-ling    Ling → Muse → MiMo → Haiku → Luna → Sonnet
+explorer            MiMo → Ling → Bunny → Luna → Haiku → Sonnet
+librarian           Ling → MiMo → Bunny → Luna → Haiku → Sonnet
+designer            Muse → MiMo → Ling → Haiku → Luna → Sonnet
+observer            Muse → MiMo → Ling → Luna → Haiku → Sonnet
 
-implementer-alt:
-MiMo → Ling → Muse → Sonnet
-
-implementer-ling:
-Ling → Muse → MiMo → Sonnet
+subscription-implementer:
+                    Haiku → Luna → Sonnet → Sol Medium
 ```
 
-If one free lane fails with an ordinary transient provider error, do not immediately use paid capacity.
+Use free work first. One ordinary 429 remains transient. After repeated independent Zen child terminations in the same phase establish Zen DEGRADED, deliberately use `subscription-implementer` before contemplating last-resort direct paid `paid-fixer`. Preserve all unchanged LOW planning/review and serious judgment gates.
 
-If two independent Zen child dispatches in the same phase terminate on provider-capacity/rate-limit errors, mark Zen degraded for that phase and route further required implementation through:
+The two new provider-specific model IDs are:
 
 ```text
-implementer-claude
+claude-code/claude-haiku-5-5
+openai/gpt-6-luna
 ```
 
-before considering:
+The bare IDs are verified upstream (`claude-haiku-5-5` in Claude Code and `gpt-6-luna` in OpenAI). Confirm these *prefixed* IDs are exposed by your installed OpenChamber/OMO instance. Run separate read-only dispatches for each and record the actual model, outcome and errors.
 
-```text
-paid-fixer
-```
+For Observer, test a real screenshot through `image_routing: "auto"`. Confirm the chosen free or subscription model actually accessed the image; model-level vision support alone does not prove the integration path works. Do not pretend a text-only model analyzed an image.
+
+Array fallback applies to runtime/model errors only when supported; it does not detect poor code quality or enforce the provider-health ledger's threshold. A free-first model array may enter subscriptions during its own single-error recovery. Use explicit escalation when verification fails and avoid knowingly degraded providers where the runtime allows safe model selection.
+
+Fully restart OpenChamber and start a **new session** after changing agent definitions or the appended policy.
 
 ## 10. Concurrency and provider health
 
@@ -338,7 +347,7 @@ TRANSIENT_THROTTLED
 DEGRADED
 ```
 
-A single ordinary 429 is transient. Permanent quota/auth/billing failures are degraded immediately.
+A single ordinary 429 is transient. Permanent quota/auth/billing failures are degraded immediately. Model arrays do not inherently skip a known-degraded provider; verify actual executed models.
 
 Do not repeatedly dispatch into a provider already known to be degraded.
 
@@ -373,14 +382,14 @@ Do not modify any files and do not dispatch any specialist yet.
 Identify your foreground model.
 List every available specialist agent.
 For planner, reviewer, auditor, oracle, fixer, implementer-alt,
-implementer-ling, implementer-claude, verification, planner-sol,
-reviewer-claude and auditor-sol, report the configured model chain.
+implementer-ling, subscription-implementer, explorer, librarian, observer,
+verification, planner-sol, reviewer-claude and auditor-sol, report the configured model chain.
 Report configured background concurrency limits.
 Confirm the project orchestration policy is loaded.
 Do not infer missing information.
 ```
 
-Configuration visibility proves registration, not that every model can execute. Runtime availability is proven only by an actual dispatch.
+Configuration visibility proves registration, not that every model can execute. Verify Haiku, Luna, actual fallback behavior, and the Observer's image path with real runtime dispatches.
 
 ## 14. OpenCode v2 fallback boundary
 

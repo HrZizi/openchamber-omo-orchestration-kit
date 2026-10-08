@@ -10,7 +10,7 @@ Use strong models where judgment matters, free models where they are sufficient,
 [![OMO](https://img.shields.io/badge/oh--my--opencode--slim-3.0.2-5c6ac4)](https://github.com/alvinunreal/oh-my-opencode-slim)
 [![OpenChamber](https://img.shields.io/badge/OpenChamber-Desktop-4b5563)](https://github.com/openchamber/openchamber)
 [![Platforms](https://img.shields.io/badge/platforms-macOS%20%7C%20Windows-0a7ea4)](#platforms)
-[![Policy](https://img.shields.io/badge/policy-balanced--provider%20v2-2ea44f)](#routing-policy)
+[![Policy](https://img.shields.io/badge/policy-balanced--provider%20v2.1-2ea44f)](#routing-policy)
 
 </div>
 
@@ -28,7 +28,8 @@ The configuration provides:
 - independent planning, review, implementation, verification, and audit roles;
 - deliberate workload balancing across **OpenAI**, **Claude Code**, **OpenCode/Zen**, and optional **DeepSeek**;
 - free-model-first implementation and verification where practical;
-- cross-provider fallback when one provider is throttled or unavailable;
+- reciprocal Haiku/Luna lightweight subscription fallbacks after free operational agents;
+- cross-provider recovery when one provider is throttled or unavailable;
 - bounded background concurrency to reduce provider bursts and 429s;
 - an audit circuit breaker to stop endless patch → audit → patch loops;
 - deterministic, readable subagent chat names;
@@ -117,7 +118,7 @@ flowchart TD
     P --> O1[OpenAI<br/>Sol / Astra]
 
     I --> Z[OpenCode / Zen<br/>free model lanes]
-    Z --> IC[Claude implementation fallback]
+    Z --> IC[Subscription fallback<br/>Haiku / Luna / Sonnet / Sol]
     IC --> D[DeepSeek paid fallback<br/>last resort]
 
     V --> ZV[Free verification lane]
@@ -257,14 +258,14 @@ The exact model IDs live in [config/oh-my-opencode-slim.json](config/oh-my-openc
 | <code>reviewer</code> | Sol High → Sonnet | Independent MEDIUM/HIGH challenge |
 | <code>reviewer-claude</code> | Sonnet | Explicit Claude review fallback |
 | <code>critical-planner</code> | Opus → Sol High → Astra xhigh | CRITICAL planning |
-| <code>explorer</code> | MiMo → Ling → Space Bunny → Sonnet | Repository reconnaissance |
-| <code>librarian</code> | Ling → MiMo → Space Bunny → Sonnet | Read-only research / documentation |
-| <code>designer</code> | Muse → MiMo → Ling → Sonnet | UI/design-oriented work |
-| <code>observer</code> | Muse → MiMo → Ling | Image-heavy observation |
-| <code>fixer</code> | Muse → MiMo → Ling → Sonnet | Primary implementation lane |
-| <code>implementer-alt</code> | MiMo → Ling → Muse → Sonnet | Alternate free implementation lane |
-| <code>implementer-ling</code> | Ling → Muse → MiMo → Sonnet | Third free implementation lane |
-| <code>implementer-claude</code> | Sonnet → Sol Medium | Cross-provider implementation fallback |
+| <code>explorer</code> | MiMo → Ling → Space Bunny → **Luna → Haiku** → Sonnet | Repository reconnaissance |
+| <code>librarian</code> | Ling → MiMo → Space Bunny → **Luna → Haiku** → Sonnet | Read-only research / documentation |
+| <code>designer</code> | Muse → MiMo → Ling → **Haiku → Luna** → Sonnet | UI/design-oriented work |
+| <code>observer</code> | Muse → MiMo → Ling → **Luna → Haiku** → Sonnet | Image-heavy observation |
+| <code>fixer</code> | Muse → MiMo → Ling → **Haiku → Luna** → Sonnet | Primary implementation lane |
+| <code>implementer-alt</code> | MiMo → Ling → Muse → **Haiku → Luna** → Sonnet | Alternate free implementation lane |
+| <code>implementer-ling</code> | Ling → Muse → MiMo → **Haiku → Luna** → Sonnet | Third free implementation lane |
+| <code>subscription-implementer</code> | **Haiku → Luna → Sonnet → Sol Medium** | Provider-neutral subscription implementation fallback |
 | <code>verification</code> | Nemotron Lightning → Ling → MiMo → Sonnet | Independent verification |
 | <code>verification-claude</code> | Sonnet | Cross-provider verification fallback |
 | <code>auditor-low</code> | Nemotron Ultra → Ling → MiMo → Sonnet | LOW-risk final audit |
@@ -284,31 +285,54 @@ The exact model IDs live in [config/oh-my-opencode-slim.json](config/oh-my-openc
 The normal free implementation lanes are:
 
 ~~~text
-fixer
-Muse first
-
-implementer-alt
-MiMo first
-
-implementer-ling
-Ling first
+fixer              Muse → MiMo → Ling
+implementer-alt    MiMo → Ling → Muse
+implementer-ling   Ling → Muse → MiMo
 ~~~
 
-These routes provide model diversity, but they still share the OpenCode/Zen provider.
-
-If Zen becomes genuinely degraded:
+They provide **model** diversity, but share Zen provider capacity. If Zen is genuinely degraded or an approved task is unsuitable for the free tier, use the subscription lane:
 
 ~~~text
-Zen free lanes
-    ↓
-implementer-claude
-    ↓
-paid-fixer (only if still necessary)
+Zen free work
+     ↓
+subscription-implementer
+Haiku → Luna → Sonnet → Sol Medium
+     ↓
+paid-fixer (direct paid DeepSeek; justified last resort only)
 ~~~
 
-A single 429 is **not** enough to justify paid escalation.
+A single ordinary 429 never justifies immediate direct paid escalation.
 
 ---
+
+## Lightweight subscription tier — v2.1
+
+Haiku 5.5 and GPT-6 Luna form an inexpensive cross-provider recovery pair **between free Zen workers and stronger Sonnet/Sol models**.
+
+| Operational agent | Free head | Subscription fallback |
+|---|---|---|
+| Explorer | MiMo → Ling → Space Bunny | **Luna → Haiku → Sonnet** |
+| Librarian (read-only) | Ling → MiMo → Space Bunny | **Luna → Haiku → Sonnet** |
+| Observer (visual) | Muse → MiMo → Ling | **Luna → Haiku → Sonnet** |
+| Designer | Muse → MiMo → Ling | **Haiku → Luna → Sonnet** |
+| Fixer | Muse → MiMo → Ling | **Haiku → Luna → Sonnet** |
+| Alternate implementer | MiMo → Ling → Muse | **Haiku → Luna → Sonnet** |
+| Ling implementer | Ling → Muse → MiMo | **Haiku → Luna → Sonnet** |
+| Subscription implementer | — | **Haiku → Luna → Sonnet → Sol Medium** |
+
+Keep `planner-low`, `reviewer-low`, independent verification, audit, serious/critical gates and Oracle **unchanged**. This is an operational cost/resilience improvement, not an instruction to weaken judgment quality.
+
+The new configured IDs are `claude-code/claude-haiku-5-5` and `openai/gpt-6-luna`. The bare vendor IDs are documented upstream, but actual availability through the installed OpenChamber provider integrations still requires runtime validation.
+
+### Observer visual fallback
+
+The Observer retains `image_routing: "auto"` and its original free models, then tries Luna, Haiku and Sonnet on supported failure modes. Both lightweight subscription models support image input, but the host/provider bridge must be tested with real screenshots. Do not claim that text-only evidence is visual verification.
+
+### Errors are not quality failures
+
+Ordered model arrays are recovery preferences for model/runtime **errors**; they do not recognize incorrect completed code. After a failed verification, the orchestrator must deliberately choose a repair or stronger model and re-run the appropriate gates.
+
+Because free-first arrays contain subscription fallbacks, they can spend subscription capacity after an individual Zen error *before* the orchestrator has formally marked Zen DEGRADED. Conversely, OpenCode v2 may not advance a chain for every type of failure. Track actual model execution and do not imply these policy thresholds are enforced by static arrays.
 
 ## Provider-health model
 
@@ -335,7 +359,7 @@ The orchestrator should:
 
 If repeated independent jobs in the same phase terminate due to the same provider's capacity/rate-limit condition, the provider is marked **DEGRADED** for that phase.
 
-For Zen implementation work, that means moving to <code>implementer-claude</code>.
+For Zen implementation work, that means moving to <code>subscription-implementer</code>, subject to the actual health of the remaining providers.
 
 Permanent quota, authentication, billing, or clearly unavailable-provider errors also move a provider directly to DEGRADED.
 
@@ -343,7 +367,7 @@ Permanent quota, authentication, billing, or clearly unavailable-provider errors
 
 ## Concurrency
 
-The default v2 configuration is intentionally conservative:
+The v2.1 configuration preserves the same conservative limits:
 
 ~~~text
 total background jobs: 3
@@ -639,7 +663,7 @@ designer
 explorer
 fixer
 implementer-alt
-implementer-claude
+subscription-implementer
 implementer-ling
 librarian
 observer
@@ -718,7 +742,7 @@ This architecture intentionally accepts a few limitations:
 - model availability and free-model catalogs change;
 - multiple "different" free models may still share the same Zen provider capacity;
 - automatic foreground failover is not relied upon on OpenCode v2;
-- OMO model-array fallback is useful but is not treated as a guarantee for every failure mode;
+- OMO model-array fallback is useful but is not treated as a guarantee for every failure mode, or as a quality check; subscription capacity may be used before Zen's degraded threshold is established;
 - permissions/tool availability can vary across hosts;
 - large multi-agent runs still require good task boundaries and acceptance criteria;
 - no orchestration policy can replace actual tests and repository-specific engineering judgment.
@@ -747,7 +771,7 @@ Do not immediately use <code>paid-fixer</code>. One 429 is treated as transient.
 
 ### Several Zen workers fail in the same phase
 
-Treat Zen as provider-degraded and use <code>implementer-claude</code> rather than hammering more Zen models.
+Treat Zen as provider-degraded and use <code>subscription-implementer</code> rather than hammering more Zen models. Its preference order is Haiku → Luna → Sonnet → Sol Medium; record which provider/model actually executed.
 
 ### The foreground model runs out of usage
 

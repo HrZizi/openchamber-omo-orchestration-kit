@@ -36,6 +36,8 @@
         "opencode/mimo-v2.6-flash-free",
         "opencode/ling-3.1-flash-free",
         "opencode/space-bunny-free",
+        "openai/gpt-6-luna",
+        "claude-code/claude-haiku-5-5",
         "claude-code/claude-sonnet-5-5"
       ]
     },
@@ -44,6 +46,8 @@
         "opencode/ling-3.1-flash-free",
         "opencode/mimo-v2.6-flash-free",
         "opencode/space-bunny-free",
+        "openai/gpt-6-luna",
+        "claude-code/claude-haiku-5-5",
         "claude-code/claude-sonnet-5-5"
       ],
       "permission": {
@@ -60,6 +64,8 @@
         "opencode/muse-spark-1.3-contributor-free",
         "opencode/mimo-v2.6-flash-free",
         "opencode/ling-3.1-flash-free",
+        "claude-code/claude-haiku-5-5",
+        "openai/gpt-6-luna",
         "claude-code/claude-sonnet-5-5"
       ]
     },
@@ -67,7 +73,10 @@
       "model": [
         "opencode/muse-spark-1.3-contributor-free",
         "opencode/mimo-v2.6-flash-free",
-        "opencode/ling-3.1-flash-free"
+        "opencode/ling-3.1-flash-free",
+        "openai/gpt-6-luna",
+        "claude-code/claude-haiku-5-5",
+        "claude-code/claude-sonnet-5-5"
       ]
     },
     "fixer": {
@@ -75,6 +84,8 @@
         "opencode/muse-spark-1.3-contributor-free",
         "opencode/mimo-v2.6-flash-free",
         "opencode/ling-3.1-flash-free",
+        "claude-code/claude-haiku-5-5",
+        "openai/gpt-6-luna",
         "claude-code/claude-sonnet-5-5"
       ]
     },
@@ -169,6 +180,8 @@
         "opencode/mimo-v2.6-flash-free",
         "opencode/ling-3.1-flash-free",
         "opencode/muse-spark-1.3-contributor-free",
+        "claude-code/claude-haiku-5-5",
+        "openai/gpt-6-luna",
         "claude-code/claude-sonnet-5-5"
       ],
       "prompt": "Implement an assigned, already-approved project task. Stay within assigned write ownership and scope, preserve architecture, add or update focused tests, and report exactly what changed and what remains. Do not broaden the task without returning to the orchestrator."
@@ -178,19 +191,23 @@
         "opencode/ling-3.1-flash-free",
         "opencode/muse-spark-1.3-contributor-free",
         "opencode/mimo-v2.6-flash-free",
+        "claude-code/claude-haiku-5-5",
+        "openai/gpt-6-luna",
         "claude-code/claude-sonnet-5-5"
       ],
       "prompt": "Act as a third free implementation lane using Ling first. Implement only an already-approved bounded task with explicit write ownership. Preserve architecture, add focused tests, and report changes and validation. Do not broaden scope."
     },
-    "implementer-claude": {
+    "subscription-implementer": {
       "model": [
+        "claude-code/claude-haiku-5-5",
+        "openai/gpt-6-luna",
         "claude-code/claude-sonnet-5-5",
         {
           "id": "openai/gpt-6.1-sol",
           "variant": "medium"
         }
       ],
-      "prompt": "Act as the cross-provider implementation fallback after the normal free OpenCode/Zen lanes are genuinely unavailable, throttled, or repeatedly terminate. Implement only the approved bounded scope, preserve write ownership, add focused tests, and do not redesign the task unless explicitly returned to planning."
+      "prompt": "Implement approved bounded tasks as the provider-neutral subscription fallback when free Zen implementation is genuinely degraded, unavailable, or unsuitable. Prefer lightweight Haiku/Luna, preserving stronger Sonnet/Sol as model-error fallbacks. Honor explicit write ownership and scope; add focused tests and report executed evidence. Stop for architectural ambiguity rather than redesigning. Successful-but-incorrect results require explicit independent verification and deliberate escalation, not presumed model-array recovery."
     },
     "verification": {
       "model": [
@@ -267,7 +284,7 @@
     },
     "paid-fixer": {
       "model": "deepseek/deepseek-flash",
-      "prompt": "Act as the final paid implementation escalation lane. Use only after the free OpenCode/Zen implementation lanes and the Claude cross-provider implementation lane are unavailable, unsuitable, or have failed, or when the orchestrator explicitly justifies paid escalation. Implement only approved bounded scope, add focused tests, avoid unrelated refactors, and report validation clearly."
+      "prompt": "Final paid implementation escalation: use only after free Zen work and subscription-implementer capacity are unavailable, unsuitable or failed, or when explicitly justified by comparative requirements or user direction. Never escalate solely because of a single ordinary 429. Implement bounded approved scope only, preserve unrelated files, add focused tests and report validation."
     }
   }
 }
